@@ -1,45 +1,38 @@
 # XTEINK Font Maker
 
-Convert TTF/OTF fonts to stock-XTEINK `.bin` fonts, with adjustable weight and
-stroke thickening. Useful when XTF fonts cannot be used in Bluetooth mode.
+Convert TTF/OTF fonts to 1-bit BIN fonts for stock XTEINK firmware, with
+adjustable variable-font weight and stroke expansion.
 
-## Run
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
 
 ```sh
 uv run make_bin.py /path/to/font.otf
 ```
 
-The BIN and a PNG preview are saved in `output/`. Copy the BIN into your reader's
-font folder. Keep the width/height suffix in its filename.
+Defaults: weight 500, stroke expansion 0.5 px, glyph size 36 px, 40×48 cells.
+BINs and PNG previews go to `output/`. Copy the BIN to your reader's font folder;
+preserve the `_40x48.bin` suffix because the reader uses the dimensions.
+Linux requires the FreeType shared library (`libfreetype6`). See `--help` for options.
 
-Defaults: weight **500**, stroke expansion **0.5 px**, glyph size **36 px**,
-cell **40×48 px**. For a lighter result:
-
-```sh
-uv run make_bin.py /path/to/font.otf --weight 450 --stroke 0.25
-```
-
-Preview three thickness options before converting:
+Preview the three example settings without generating BINs:
 
 ```sh
 uv run make_bin.py /path/to/font.otf --compare --preview-only
 ```
 
-Remove `--preview-only` to generate all three BINs. See `--help` for size,
-cell dimensions, and output-folder options. Weight adjusts the `wght` axis of
-variable fonts; static fonts retain their original weight. Stroke expansion
-works with both. Leave enough room in the cell to avoid clipping glyphs.
+![Weight 450 and stroke 0.25 px; weight 500 and stroke 0.25 px; weight 500 and stroke 0.5 px, from top to bottom](examples/comparison.png)
 
-BIN output is 1-bit, with 65,536 Unicode BMP slots. Characters absent from the
-source font are blank; non-BMP characters are not included. A 40×48 BIN is 15 MiB.
-Unlike a threshold slider alone, this converter can expand the rendered strokes.
+These examples were generated from Source Han Serif SC version 2.003 at 36 px,
+in 40×48 cells, as 1-bit fonts for stock XTEINK firmware. Each contains 65,536
+Unicode BMP slots and is 15,728,640 bytes (15 MiB); missing characters are blank.
+Rows below match the preview from top to bottom.
 
-The packing layout was checked against the official web font maker; generated
-fonts still need a visual check on your reader. Linux needs the FreeType shared
-library (`sudo apt install libfreetype6` if missing).
+| Example name | Weight | Stroke expansion | Download |
+| --- | ---: | ---: | --- |
+| Reader Serif 450 Light | 450 | 0.25 px | [BIN](examples/fonts/SourceHanSerifSC_w450_stroke0p25_40x48.bin) |
+| Reader Serif 500 Light | 500 | 0.25 px | [BIN](examples/fonts/SourceHanSerifSC_w500_stroke0p25_40x48.bin) |
+| Reader Serif 500 Bold | 500 | 0.5 px | [BIN](examples/fonts/SourceHanSerifSC_w500_stroke0p5_40x48.bin) |
 
-Your fonts and generated files stay local and are ignored by Git. No source fonts,
-downloaded website code, tests, or CI workflows are included. Not affiliated with
-XTEINK. Licensed under [GPLv3](LICENSE).
+The Python app is [GPL-3.0-only](LICENSE). The converted example fonts are
+separately licensed under [SIL OFL 1.1](examples/fonts/OFL.txt); see their
+[notices](examples/fonts/NOTICE.md). Source OTF files are not included.

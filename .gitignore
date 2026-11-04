@@ -9,3 +9,7 @@ output/
 *.ttf
 *.ttc
 .env
+
+!examples/fonts/SourceHanSerifSC_w450_stroke0p25_40x48.bin
+!examples/fonts/SourceHanSerifSC_w500_stroke0p25_40x48.bin
+!examples/fonts/SourceHanSerifSC_w500_stroke0p5_40x48.bin
