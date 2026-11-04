@@ -10,6 +10,9 @@ from pathlib import Path
 import freetype
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
+WEIGHTS = (450, 480, 500, 550)
+STROKES = (0, .25, .5)
+
 # Fan Zhongyan, Yueyang Lou Ji (岳阳楼记), closing passage.
 SAMPLE = ('嗟夫！予尝求古仁人之心，或异二者之为，何哉？',
           '不以物喜，不以己悲；居庙堂之高则忧其民；',
@@ -101,35 +104,48 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('font', type=Path)
     parser.add_argument('--preview-only', action='store_true')
-    parser.add_argument('--weight', type=float, default=500)
-    parser.add_argument('--stroke', type=float, default=.5, help='Outward thickening in pixels')
+    parser.add_argument('--weight', type=float, help='Generate one weight instead of the grid (single-font default: 500)')
+    parser.add_argument('--stroke', type=float, help='Generate one expansion instead of the grid (single-font default: 0 px)')
     parser.add_argument('--size', type=int, default=36, help='Glyph size in pixels')
     parser.add_argument('--width', type=int, default=40, help='Cell width')
     parser.add_argument('--height', type=int, default=48, help='Cell height')
-    parser.add_argument('--compare', action='store_true', help='Generate three thickness variants')
+    parser.add_argument('--compare', action='store_true', help='Generate the default 4-row, 3-column weight/expansion grid')
     parser.add_argument('--output', type=Path, default=Path('output'))
     args = parser.parse_args()
     if not args.font.is_file():
         parser.error('Input font does not exist')
     if not 1 <= args.size <= 255 or not 1 <= args.width <= 255 or not 1 <= args.height <= 255:
         parser.error('Size and cell dimensions must be in 1–255')
-    if not 0 <= args.stroke <= 4:
+    if args.stroke is not None and not 0 <= args.stroke <= 4:
         parser.error('Stroke must be in 0–4 pixels')
+    if args.compare and (args.weight is not None or args.stroke is not None):
+        parser.error('--compare cannot be combined with --weight or --stroke; omit --compare to generate a single font')
+    grid = args.weight is None and args.stroke is None
     target = args.output
     target.mkdir(parents=True, exist_ok=True)
-    variants = [(450, .25), (500, .25), (500, .5)] if args.compare else [(args.weight, args.stroke)]
+    variants = ([(weight, stroke) for weight in WEIGHTS for stroke in STROKES]
+                if grid else [(args.weight if args.weight is not None else 500,
+                               args.stroke if args.stroke is not None else 0)])
     family = re.sub(r'[^A-Za-z0-9_-]+', '_', args.font.stem)
     panels = []
     for weight, stroke in variants:
-        name = f'{family}_w{weight:g}_stroke{str(stroke).replace(".", "p")}_{args.width}x{args.height}'
+        stroke_tag = f'{stroke:g}'.replace('.', 'p')
+        name = f'{family}_w{weight:g}_stroke{stroke_tag}_{args.width}x{args.height}'
         renderer = Renderer(args.font, weight, stroke, args.size, args.width, args.height)
         panels.append(renderer.preview(f'Weight {weight:g}, stroke {stroke}px, {args.size}px, cell {args.width}x{args.height}'))
         if not args.preview_only:
             renderer.write(target / (name + '.bin'))
     panel_width, panel_height = panels[0].size
-    preview = Image.new('RGB', (panel_width, panel_height * len(panels)), 'white')
+    columns = len(STROKES) if grid else 1
+    rows = len(WEIGHTS) if grid else 1
+    preview = Image.new('RGB', (panel_width * columns, panel_height * rows), 'white')
     for index, panel in enumerate(panels):
-        preview.paste(panel, (0, panel_height * index))
+        preview.paste(panel, (panel_width * (index % columns), panel_height * (index // columns)))
+    draw = ImageDraw.Draw(preview)
+    for column in range(1, columns):
+        draw.line((column * panel_width, 0, column * panel_width, preview.height - 1), fill='#dddddd')
+    for row in range(1, rows):
+        draw.line((0, row * panel_height, preview.width - 1, row * panel_height), fill='#dddddd')
     preview.save(target / 'comparison.png')
     print('Saved comparison.png', flush=True)
 

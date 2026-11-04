@@ -13,10 +13,10 @@ The copyright above was read from the source font's embedded metadata; the
 [upstream license](https://github.com/adobe-fonts/source-han-serif/blob/master/LICENSE.txt)
 supplies the OFL text.
 
-The modified versions are named **Reader Serif 450 Light**, **Reader Serif 500
-Light**, and **Reader Serif 500 Bold**, respectively. They use weight 450 with
-0.25 px stroke expansion, weight 500 with 0.25 px expansion, and weight 500 with
-0.5 px expansion. Conversion rasterizes at 36 px into 40×48 cells, retaining
+The twelve modified versions use weights 450, 480, 500, and 550, each with
+stroke expansion of 0, 0.25, or 0.5 px. Their names follow **Reader Serif
+{weight} Stroke {expansion}**, for example **Reader Serif 480 Stroke 0.25**.
+Conversion rasterizes at 36 px into 40×48 cells, retaining
 65,536 BMP slots as 1-bit glyphs and leaving missing characters blank.
 
 The `SourceHanSerifSC_…_40x48.bin` filenames record source provenance and
