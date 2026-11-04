@@ -4,15 +4,18 @@
 import argparse
 import re
 import ctypes
+import unicodedata
 from pathlib import Path
 
 import freetype
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
-SAMPLE = ('天地玄黄，宇宙洪荒。日月盈昃，辰宿列张。',
-          '寒来暑往，秋收冬藏。闰余成岁，律吕调阳。',
-          '云腾致雨，露结为霜。金生丽水，玉出昆冈。',
-          '思源宋体：细笔画与粗笔画，清晰阅读。')
+# Fan Zhongyan, Yueyang Lou Ji (岳阳楼记), closing passage.
+SAMPLE = ('嗟夫！予尝求古仁人之心，或异二者之为，何哉？',
+          '不以物喜，不以己悲；居庙堂之高则忧其民；',
+          '处江湖之远则忧其君。是进亦忧，退亦忧。',
+          '然则何时而乐耶？其必曰：“先天下之忧而忧，',
+          '后天下之乐而乐”乎！噫！微斯人，吾谁与归？')
 
 
 class Renderer:
@@ -47,6 +50,15 @@ class Renderer:
             mask = Image.frombytes('L', (bitmap.width, bitmap.rows), raw,
                                    'raw', 'L', bitmap.pitch)
             x = (self.width * scale - bitmap.width) // 2
+            char = chr(codepoint)
+            if (unicodedata.category(char).startswith('P')
+                    and (unicodedata.east_asian_width(char) in ('W', 'F')
+                         or char in '“”‘’')):
+                # Preserve punctuation's side bearings inside its advance box.
+                # Opening marks sit toward the following text; closing marks
+                # and SC pause/stop marks sit toward the preceding text.
+                advance = glyph.advance.x / 64
+                x = round((self.width * scale - advance) / 2) + glyph.bitmap_left
             y = self.baseline * scale - glyph.bitmap_top
             canvas.paste(mask, (x, y))
         if self.radius:
